@@ -1,0 +1,6 @@
+{
+  "name": "TN Tax Calc",
+  "description": "Tamil Nadu Government & Individual Employee Income Tax Calculator with IFHRMS Pay Drawn slip auto-fill, New & Old Regime computation, 1-Page IT Statement, PDF generation, and CSV export.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
