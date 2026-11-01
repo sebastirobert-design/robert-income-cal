@@ -34,7 +34,7 @@ fun OnePageStatementScreen(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(12.dp)
+            .padding(start = 8.dp, end = 20.dp, top = 8.dp, bottom = 12.dp)
             .testTag("one_page_statement_card"),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -152,16 +152,17 @@ fun OnePageStatementScreen(
                                 Box(modifier = Modifier.width(90.dp), contentAlignment = Alignment.Center) {
                                     OutlinedButton(
                                         onClick = { onEditMonthClick(m) },
-                                        contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp),
-                                        modifier = Modifier.height(28.dp).testTag("btn_edit_month_${m.monthIndex}")
+                                        contentPadding = PaddingValues(horizontal = 6.dp, vertical = 1.dp),
+                                        shape = RoundedCornerShape(6.dp),
+                                        modifier = Modifier.height(25.dp).testTag("btn_edit_month_${m.monthIndex}")
                                     ) {
                                         Icon(
                                             imageVector = Icons.Default.Edit,
                                             contentDescription = "Edit",
-                                            modifier = Modifier.size(12.dp)
+                                            modifier = Modifier.size(11.dp)
                                         )
                                         Spacer(modifier = Modifier.width(3.dp))
-                                        Text("திருத்து", fontSize = 11.sp)
+                                        Text("திருத்து", fontSize = 10.5.sp)
                                     }
                                 }
                             }

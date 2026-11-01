@@ -27,7 +27,7 @@ fun MonthlyPayDrawnScreen(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(12.dp)
+            .padding(start = 8.dp, end = 20.dp, top = 8.dp, bottom = 12.dp)
             .testTag("monthly_pay_drawn_card"),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),

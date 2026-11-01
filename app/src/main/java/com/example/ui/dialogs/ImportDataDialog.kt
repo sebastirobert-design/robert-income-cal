@@ -7,6 +7,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.UploadFile
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -21,6 +22,7 @@ import androidx.compose.ui.window.Dialog
 @Composable
 fun ImportDataDialog(
     onDismiss: () -> Unit,
+    onPickFileClick: () -> Unit,
     onImportText: (String) -> Unit,
     onLoadSample: () -> Unit
 ) {
@@ -44,81 +46,106 @@ fun ImportDataDialog(
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
-            shape = RoundedCornerShape(16.dp),
+            shape = RoundedCornerShape(14.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(8.dp)
+                .padding(6.dp)
                 .testTag("dialog_import_ifhrms")
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(18.dp)
+                    .padding(14.dp)
                     .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Text(
-                    text = "IFHRMS Pay Drawn தரவு இறக்குமதி (Import IFHRMS)",
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                    text = "IFHRMS Pay Drawn தரவு இறக்குமதி (Import Pay Drawn PDF)",
+                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, fontSize = 14.sp)
                 )
 
                 Text(
-                    text = "IFHRMS-லிருந்து பதிவிறக்கிய ஊதிய அறிக்கை (Pay Drawn Particulars PDF) விவரங்களை கீழே ஒட்டவும் அல்லது ஒரு தொடுதலில் மாதிரியை ஏற்றவும்.",
-                    fontSize = 11.5.sp,
+                    text = "சாதனத்தில் உள்ள IFHRMS PDF கோப்பைத் தேர்வு செய்யவும் அல்லது மாதிரி அறிக்கையை ஒரே தொடுதலில் ஏற்றவும்.",
+                    fontSize = 11.sp,
                     color = Color(0xFF64748B)
                 )
 
-                // Quick One-tap Sample Button
+                // Option 1: Pick PDF from Storage
+                Button(
+                    onClick = {
+                        onDismiss()
+                        onPickFileClick()
+                    },
+                    shape = RoundedCornerShape(8.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4338CA)),
+                    modifier = Modifier.fillMaxWidth().height(42.dp).testTag("btn_pick_pdf_file")
+                ) {
+                    Icon(imageVector = Icons.Default.FolderOpen, contentDescription = "Pick PDF", modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        "📁 சாதனத்தில் உள்ள PDF தேர்வு செய் (Choose PDF File)",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 11.5.sp
+                    )
+                }
+
+                // Option 2: 1-Click Load Sample
                 OutlinedButton(
                     onClick = {
                         onLoadSample()
                         onDismiss()
                     },
                     shape = RoundedCornerShape(8.dp),
-                    border = BorderStroke(1.dp, Color(0xFF4F46E5)),
-                    modifier = Modifier.fillMaxWidth().testTag("btn_load_sample_slip")
+                    border = BorderStroke(1.dp, Color(0xFFD97706)),
+                    modifier = Modifier.fillMaxWidth().height(40.dp).testTag("btn_load_sample_slip")
                 ) {
-                    Icon(imageVector = Icons.Default.Description, contentDescription = "Sample", tint = Color(0xFF4F46E5))
+                    Icon(imageVector = Icons.Default.Description, contentDescription = "Sample", tint = Color(0xFFD97706), modifier = Modifier.size(15.dp))
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        "மாதிரி IFHRMS ஊதிய சீட்டு ஏற்று (Robert Sebastin J)",
+                        "✨ மாதிரி IFHRMS PDF அறிக்கை ஏற்று (Robert Sebastin J)",
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF4F46E5),
-                        fontSize = 11.5.sp
+                        color = Color(0xFFD97706),
+                        fontSize = 11.sp
                     )
                 }
 
-                Divider()
+                HorizontalDivider(color = Color(0xFFE2E8F0))
+
+                Text(
+                    text = "அல்லது உரை / CSV நகலை ஒட்டவும் (Or Paste Text):",
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFF475569)
+                )
 
                 OutlinedTextField(
                     value = rawText,
                     onValueChange = { rawText = it },
-                    label = { Text("IFHRMS உரை / CSV வரிகளை ஒட்டவும் (Paste text)") },
-                    placeholder = { Text("Employee ID : 43020114172\nEmployee Name : Robert Sebastin J\nDuty Pay: 91700...") },
+                    placeholder = { Text("Employee ID : 43020114172\nEmployee Name : Robert Sebastin J\nDuty Pay: 91700...", fontSize = 11.sp) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(130.dp)
+                        .height(100.dp)
                         .testTag("input_paste_ifhrms_text"),
                     shape = RoundedCornerShape(8.dp)
                 )
 
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                     TextButton(onClick = onDismiss) {
-                        Text("ரத்து (Cancel)")
+                        Text("ரத்து", fontSize = 12.sp)
                     }
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
                     Button(
                         onClick = {
                             val txt = rawText.ifBlank { samplePaySlipText }
                             onImportText(txt)
                             onDismiss()
                         },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4F46E5)),
-                        modifier = Modifier.testTag("btn_submit_import")
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2563EB)),
+                        modifier = Modifier.height(36.dp).testTag("btn_submit_import")
                     ) {
-                        Icon(imageVector = Icons.Default.UploadFile, contentDescription = "Import")
+                        Icon(imageVector = Icons.Default.UploadFile, contentDescription = "Import", modifier = Modifier.size(14.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("இறக்குமதி செய் (Import)")
+                        Text("இறக்குமதி செய்", fontSize = 11.5.sp)
                     }
                 }
             }

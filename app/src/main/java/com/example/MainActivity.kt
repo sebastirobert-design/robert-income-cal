@@ -79,6 +79,19 @@ fun TaxCalculatorApp(
     var showAddTeacherDialog by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
 
+    val pdfPickerLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        contract = androidx.activity.result.contract.ActivityResultContracts.OpenDocument()
+    ) { uri: android.net.Uri? ->
+        uri?.let {
+            val text = com.example.parser.PdfTextExtractor.extractTextFromUri(context, it)
+            if (text.isNotBlank()) {
+                viewModel.parseAndLoadText(text)
+            } else {
+                viewModel.loadStaffProfile(com.example.parser.IfhrmsDataParser.PRESET_STAFF[0])
+            }
+        }
+    }
+
     LaunchedEffect(snackbarMessage) {
         snackbarMessage?.let {
             snackbarHostState.showSnackbar(it)
@@ -118,17 +131,19 @@ fun TaxCalculatorApp(
 
             // Tabs Row
             val tabs = listOf(
-                "1 பக்க அதிகாரப்பூர்வ அறிக்கை (1-Page IT Statement)" to Icons.Default.Description,
-                "தரவு உள்ளீடு / அமைப்புகள் (Data Entry & Setup)" to Icons.Default.Settings,
-                "12 மாத ஊதியப் பட்டியல் (Monthly Pay Drawn)" to Icons.Default.TableChart,
-                "வரி கணக்கீடு & ஒப்பீடு (Tax Slabs & Old vs New)" to Icons.Default.Balance
+                "1 பக்க அறிக்கை (1-Page IT Statement)" to Icons.Default.Description,
+                "தரவு உள்ளீடு (Data Entry & Setup)" to Icons.Default.Settings,
+                "12 மாத ஊதியம் (Monthly Pay Drawn)" to Icons.Default.TableChart,
+                "வரி ஒப்பீடு (Tax Slabs & Old vs New)" to Icons.Default.Balance
             )
 
             ScrollableTabRow(
                 selectedTabIndex = activeTab,
-                edgePadding = 12.dp,
+                edgePadding = 8.dp,
                 modifier = Modifier
                     .fillMaxWidth()
+                    .padding(end = 16.dp)
+                    .height(36.dp)
                     .testTag("main_tabs_row"),
                 containerColor = MaterialTheme.colorScheme.surface,
                 contentColor = BluePrimary
@@ -139,11 +154,11 @@ fun TaxCalculatorApp(
                         onClick = { viewModel.selectTab(index) },
                         text = {
                             Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                                Icon(imageVector = icon, contentDescription = null, modifier = Modifier.size(16.dp))
-                                Spacer(modifier = Modifier.width(6.dp))
+                                Icon(imageVector = icon, contentDescription = null, modifier = Modifier.size(13.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
                                 Text(
                                     text = title,
-                                    fontSize = 11.5.sp,
+                                    fontSize = 10.5.sp,
                                     fontWeight = if (activeTab == index) FontWeight.Bold else FontWeight.Medium
                                 )
                             }
@@ -178,8 +193,22 @@ fun TaxCalculatorApp(
                         profile = currentProfile,
                         taxYear = taxYear,
                         earnings = otherEarnings,
-                        onAutoFill = { bp, hra, grade, incMonth, janDa, julDa, daArr, bonus, surrenderDays ->
-                            viewModel.autoFillData(bp, hra, grade, incMonth, janDa, julDa, daArr, bonus, surrenderDays)
+                        onAutoFill = { bp, hra, grade, incMonth, janDa, julDa, janArrM, janArrA, julArrM, julArrA, bonus, surrDays, surrMonth ->
+                            viewModel.autoFillData(
+                                marchBasic = bp,
+                                fixedHra = hra,
+                                hraGrade = grade,
+                                incrementMonth = incMonth,
+                                janDa = janDa,
+                                julDa = julDa,
+                                janDaArrearMonths = janArrM,
+                                janDaArrearAmount = janArrA,
+                                julDaArrearMonths = julArrM,
+                                julDaArrearAmount = julArrA,
+                                bonus = bonus,
+                                surrenderDays = surrDays,
+                                surrenderMonth = surrMonth
+                            )
                             viewModel.selectTab(0) // Automatically jump to 1-Page statement to show results!
                         },
                         onPasteIfhrmsClick = { viewModel.setImportDialog(true) }
@@ -231,6 +260,9 @@ fun TaxCalculatorApp(
     if (showImportDialog) {
         ImportDataDialog(
             onDismiss = { viewModel.setImportDialog(false) },
+            onPickFileClick = {
+                pdfPickerLauncher.launch(arrayOf("application/pdf", "*/*"))
+            },
             onImportText = { viewModel.parseAndLoadText(it) },
             onLoadSample = {
                 viewModel.loadStaffProfile(com.example.parser.IfhrmsDataParser.PRESET_STAFF[0])

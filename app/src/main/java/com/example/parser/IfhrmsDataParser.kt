@@ -199,42 +199,77 @@ object IfhrmsDataParser {
         var marchHra: Double? = null
         var daArrear: Double? = null
 
-        val lines = rawText.lines()
-        for (line in lines) {
+        val lines = rawText.lines().map { it.trim() }.filter { it.isNotEmpty() }
+        for (i in lines.indices) {
+            val line = lines[i]
+            val nextLine = if (i + 1 < lines.size) lines[i + 1] else ""
+
             if (line.contains("Employee Name", ignoreCase = true)) {
                 val m = Pattern.compile("Employee\\s+Name\\s*:\\s*([A-Za-z\\s\\.]+?)(?:GBM|PAN|Date|$)").matcher(line)
-                if (m.find()) empName = m.group(1)?.trim()
+                if (m.find()) {
+                    empName = m.group(1)?.trim()
+                } else if (nextLine.isNotBlank() && !nextLine.contains(":")) {
+                    empName = nextLine.trim()
+                }
             }
             if (line.contains("Employee ID", ignoreCase = true)) {
                 val m = Pattern.compile("Employee\\s+ID\\s*:\\s*(\\d+)").matcher(line)
-                if (m.find()) empId = m.group(1)?.trim()
+                if (m.find()) {
+                    empId = m.group(1)?.trim()
+                } else if (nextLine.matches(Regex("\\d{6,14}"))) {
+                    empId = nextLine.trim()
+                }
             }
             if (line.contains("PAN No", ignoreCase = true)) {
                 val m = Pattern.compile("PAN\\s+No\\s*:\\s*([A-Z0-9]+)").matcher(line)
-                if (m.find()) panNo = m.group(1)?.trim()
+                if (m.find()) {
+                    panNo = m.group(1)?.trim()
+                } else if (nextLine.matches(Regex("[A-Z]{5}[0-9]{4}[A-Z]"))) {
+                    panNo = nextLine.trim()
+                }
             }
             if (line.contains("Aadhar No", ignoreCase = true)) {
                 val m = Pattern.compile("Aadhar\\s+No\\s*:\\s*([A-Za-z0-9]+)").matcher(line)
-                if (m.find()) aadharNo = m.group(1)?.trim()
+                if (m.find()) {
+                    aadharNo = m.group(1)?.trim()
+                } else if (nextLine.isNotBlank() && !nextLine.contains(":")) {
+                    aadharNo = nextLine.trim()
+                }
             }
             if (line.contains("Mobile No", ignoreCase = true)) {
                 val m = Pattern.compile("Mobile\\s+No\\s*:\\s*(\\d+)").matcher(line)
-                if (m.find()) mobileNo = m.group(1)?.trim()
+                if (m.find()) {
+                    mobileNo = m.group(1)?.trim()
+                } else if (nextLine.matches(Regex("\\d{10}"))) {
+                    mobileNo = nextLine.trim()
+                }
             }
             if (line.contains("Date of Birth", ignoreCase = true)) {
                 val m = Pattern.compile("Date\\s+of\\s+Birth\\s*:\\s*([A-Za-z0-9\\-]+)").matcher(line)
-                if (m.find()) dob = m.group(1)?.trim()
+                if (m.find()) {
+                    dob = m.group(1)?.trim()
+                } else if (nextLine.isNotBlank() && !nextLine.contains(":")) {
+                    dob = nextLine.trim()
+                }
             }
             if (line.contains("Joining Date", ignoreCase = true)) {
                 val m = Pattern.compile("Joining\\s+Date\\s*:\\s*([A-Za-z0-9\\-]+)").matcher(line)
-                if (m.find()) joiningDate = m.group(1)?.trim()
+                if (m.find()) {
+                    joiningDate = m.group(1)?.trim()
+                } else if (nextLine.isNotBlank() && !nextLine.contains(":")) {
+                    joiningDate = nextLine.trim()
+                }
             }
             if (line.contains("Retirement Date", ignoreCase = true)) {
                 val m = Pattern.compile("Retirement\\s+Date\\s*:\\s*([A-Za-z0-9\\-]+)").matcher(line)
-                if (m.find()) retirementDate = m.group(1)?.trim()
+                if (m.find()) {
+                    retirementDate = m.group(1)?.trim()
+                } else if (nextLine.isNotBlank() && !nextLine.contains(":")) {
+                    retirementDate = nextLine.trim()
+                }
             }
             if (line.contains("Duty Pay", ignoreCase = true)) {
-                val parts = line.split("\\s+".toRegex())
+                val parts = (line + " " + nextLine).split("\\s+".toRegex())
                 for (p in parts) {
                     val v = p.toDoubleOrNull()
                     if (v != null && v > 10000.0) {
@@ -244,7 +279,7 @@ object IfhrmsDataParser {
                 }
             }
             if (line.contains("House Rent Allowance", ignoreCase = true)) {
-                val parts = line.split("\\s+".toRegex())
+                val parts = (line + " " + nextLine).split("\\s+".toRegex())
                 for (p in parts) {
                     val v = p.toDoubleOrNull()
                     if (v != null && v in 500.0..10000.0) {
@@ -254,7 +289,7 @@ object IfhrmsDataParser {
                 }
             }
             if (line.contains("Dearness Allowance Arrear", ignoreCase = true)) {
-                val parts = line.split("\\s+".toRegex())
+                val parts = (line + " " + nextLine).split("\\s+".toRegex())
                 for (p in parts) {
                     val v = p.toDoubleOrNull()
                     if (v != null && v in 1000.0..50000.0) {

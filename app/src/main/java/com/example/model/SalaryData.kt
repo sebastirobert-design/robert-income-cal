@@ -37,12 +37,14 @@ data class SalaryMonthData(
 }
 
 data class OtherEarnings(
-    var daArrear1: Double = 7336.0,
-    var daArrear2: Double = 0.0,
-    var daArrearMonths: Int = 4,
-    var bonus: Double = 3000.0,           // Standard festival bonus
-    var surrenderDays: Int = 0,           // 0, 15, or 30 days
-    var surrenderMonth: String = "None",  // Month surrendered
+    var daArrear1: Double = 7336.0,          // Jan DA Arrear Amount (ரூபாய்)
+    var daArrearMonths1: Int = 4,            // Jan DA Arrear Months (நிலுவை மாதங்கள்)
+    var daArrear2: Double = 0.0,             // Jul DA Arrear Amount (ரூபாய்)
+    var daArrearMonths2: Int = 0,            // Jul DA Arrear Months (நிலுவை மாதங்கள்)
+    var daArrearMonths: Int = 4,             // Backward-compatible alias
+    var bonus: Double = 3000.0,              // Standard festival bonus
+    var surrenderDays: Int = 0,              // 0, 15, or 30 days
+    var surrenderMonth: String = "None",     // Month surrendered
     var surrenderAmount: Double = 0.0,
     var otherArrear1: Double = 0.0,
     var otherArrear2: Double = 0.0

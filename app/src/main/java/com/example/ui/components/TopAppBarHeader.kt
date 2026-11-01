@@ -9,7 +9,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FileDownload
-import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.filled.Print
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.UploadFile
@@ -40,163 +39,224 @@ fun TopAppBarHeader(
     Surface(
         modifier = modifier.fillMaxWidth(),
         color = NavyDark,
-        shadowElevation = 4.dp
+        shadowElevation = 3.dp
     ) {
-        Column(
+        BoxWithConstraints(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 14.dp, vertical = 10.dp)
+                .padding(start = 10.dp, end = 22.dp, top = 6.dp, bottom = 6.dp)
         ) {
-            // Row 1: Logo, App Title, Year Badge & School info
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Gold Rupee Icon
-                Box(
-                    modifier = Modifier
-                        .size(38.dp)
-                        .background(GoldAccent, CircleShape),
-                    contentAlignment = Alignment.Center
+            val isWide = maxWidth >= 720.dp
+
+            if (isWide) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text(
-                        text = "₹",
-                        color = Color.Black,
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Black
+                    BrandingContent(
+                        taxYear = taxYear,
+                        profile = profile,
+                        onYearToggle = onYearToggle,
+                        modifier = Modifier.weight(1f, fill = false)
+                    )
+
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    ActionButtonsRow(
+                        onImportPdfClick = onImportPdfClick,
+                        onPrintPdfClick = onPrintPdfClick,
+                        onExportCsvClick = onExportCsvClick,
+                        onWhatsAppClick = onWhatsAppClick
                     )
                 }
+            } else {
+                Column(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    BrandingContent(
+                        taxYear = taxYear,
+                        profile = profile,
+                        onYearToggle = onYearToggle,
+                        modifier = Modifier.fillMaxWidth()
+                    )
 
-                Spacer(modifier = Modifier.width(10.dp))
+                    Spacer(modifier = Modifier.height(6.dp))
 
-                Column(modifier = Modifier.weight(1f)) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Text(
-                            text = "தமிழ்நாடு எளிய வருமான வரி செயலி",
-                            color = Color.White,
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 15.sp
-                            )
-                        )
-                        // Year Toggle Badge
-                        Surface(
-                            shape = RoundedCornerShape(6.dp),
-                            color = BluePrimary,
-                            modifier = Modifier
-                                .clickable { onYearToggle() }
-                                .testTag("year_toggle_badge")
-                        ) {
-                            Text(
-                                text = taxYear.label,
-                                color = Color.White,
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp)
-                            )
-                        }
-                    }
-                    Text(
-                        text = "${profile.schoolOffice} (குறியீடு: ${profile.schoolCode.ifBlank { "33230500103" }})",
-                        color = Color(0xFF94A3B8),
-                        style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
-                        maxLines = 1
+                    ActionButtonsRow(
+                        onImportPdfClick = onImportPdfClick,
+                        onPrintPdfClick = onPrintPdfClick,
+                        onExportCsvClick = onExportCsvClick,
+                        onWhatsAppClick = onWhatsAppClick,
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
             }
+        }
+    }
+}
 
-            Spacer(modifier = Modifier.height(10.dp))
+@Composable
+private fun BrandingContent(
+    taxYear: TaxYear,
+    profile: EmployeeProfile,
+    onYearToggle: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Gold Rupee Icon
+        Box(
+            modifier = Modifier
+                .size(32.dp)
+                .background(GoldAccent, CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "₹",
+                color = Color.Black,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Black
+            )
+        }
 
-            // Row 2: Action buttons (Import PDF, A4 Print, Export CSV, WhatsApp)
+        Spacer(modifier = Modifier.width(8.dp))
+
+        Column {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                // Button 1: Import Pay Drawn PDF
-                Button(
-                    onClick = onImportPdfClick,
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4F46E5)),
-                    shape = RoundedCornerShape(8.dp),
-                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
-                    modifier = Modifier
-                        .height(36.dp)
-                        .testTag("btn_import_pdf")
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.UploadFile,
-                        contentDescription = "Import",
-                        modifier = Modifier.size(16.dp),
-                        tint = Color.White
+                Text(
+                    text = "தமிழ்நாடு எளிய வருமான வரி செயலி",
+                    color = Color.White,
+                    style = MaterialTheme.typography.titleSmall.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 13.5.sp
                     )
-                    Spacer(modifier = Modifier.width(5.dp))
-                    Text("Import Pay Drawn PDF", fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                }
-
-                // Button 2: A4 Print / PDF
-                Button(
-                    onClick = onPrintPdfClick,
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD97706)),
-                    shape = RoundedCornerShape(8.dp),
-                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
+                )
+                // Year Toggle Badge
+                Surface(
+                    shape = RoundedCornerShape(4.dp),
+                    color = BluePrimary,
                     modifier = Modifier
-                        .height(36.dp)
-                        .testTag("btn_a4_print")
+                        .clickable { onYearToggle() }
+                        .testTag("year_toggle_badge")
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Print,
-                        contentDescription = "Print",
-                        modifier = Modifier.size(16.dp),
-                        tint = Color.White
+                    Text(
+                        text = taxYear.label,
+                        color = Color.White,
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 1.dp)
                     )
-                    Spacer(modifier = Modifier.width(5.dp))
-                    Text("A4 Print / PDF", fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                }
-
-                // Button 3: Export CSV
-                Button(
-                    onClick = onExportCsvClick,
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0284C7)),
-                    shape = RoundedCornerShape(8.dp),
-                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
-                    modifier = Modifier
-                        .height(36.dp)
-                        .testTag("btn_export_csv")
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.FileDownload,
-                        contentDescription = "Export CSV",
-                        modifier = Modifier.size(16.dp),
-                        tint = Color.White
-                    )
-                    Spacer(modifier = Modifier.width(5.dp))
-                    Text("Export CSV", fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                }
-
-                // Button 4: WhatsApp
-                Button(
-                    onClick = onWhatsAppClick,
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF16A34A)),
-                    shape = RoundedCornerShape(8.dp),
-                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
-                    modifier = Modifier
-                        .height(36.dp)
-                        .testTag("btn_whatsapp_share")
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Share,
-                        contentDescription = "WhatsApp",
-                        modifier = Modifier.size(16.dp),
-                        tint = Color.White
-                    )
-                    Spacer(modifier = Modifier.width(5.dp))
-                    Text("WhatsApp", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                 }
             }
+            Text(
+                text = "${profile.schoolOffice} (குறியீடு: ${profile.schoolCode.ifBlank { "33230500103" }})",
+                color = Color(0xFF94A3B8),
+                style = MaterialTheme.typography.bodySmall.copy(fontSize = 10.sp),
+                maxLines = 1
+            )
+        }
+    }
+}
+
+@Composable
+private fun ActionButtonsRow(
+    onImportPdfClick: () -> Unit,
+    onPrintPdfClick: () -> Unit,
+    onExportCsvClick: () -> Unit,
+    onWhatsAppClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .horizontalScroll(rememberScrollState())
+            .padding(end = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Button 1: Import Pay Drawn PDF
+        Button(
+            onClick = onImportPdfClick,
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4338CA)),
+            shape = RoundedCornerShape(6.dp),
+            contentPadding = PaddingValues(horizontal = 9.dp, vertical = 2.dp),
+            modifier = Modifier
+                .height(30.dp)
+                .testTag("btn_import_pdf")
+        ) {
+            Icon(
+                imageVector = Icons.Default.UploadFile,
+                contentDescription = "Import",
+                modifier = Modifier.size(13.dp),
+                tint = Color.White
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Text("Import Pay Drawn PDF", fontSize = 10.5.sp, fontWeight = FontWeight.Bold)
+        }
+
+        // Button 2: A4 Print / PDF
+        Button(
+            onClick = onPrintPdfClick,
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFC2410C)),
+            shape = RoundedCornerShape(6.dp),
+            contentPadding = PaddingValues(horizontal = 9.dp, vertical = 2.dp),
+            modifier = Modifier
+                .height(30.dp)
+                .testTag("btn_a4_print")
+        ) {
+            Icon(
+                imageVector = Icons.Default.Print,
+                contentDescription = "Print",
+                modifier = Modifier.size(13.dp),
+                tint = Color.White
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Text("A4 Print / PDF", fontSize = 10.5.sp, fontWeight = FontWeight.Bold)
+        }
+
+        // Button 3: Export CSV
+        Button(
+            onClick = onExportCsvClick,
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0369A1)),
+            shape = RoundedCornerShape(6.dp),
+            contentPadding = PaddingValues(horizontal = 9.dp, vertical = 2.dp),
+            modifier = Modifier
+                .height(30.dp)
+                .testTag("btn_export_csv")
+        ) {
+            Icon(
+                imageVector = Icons.Default.FileDownload,
+                contentDescription = "Export CSV",
+                modifier = Modifier.size(13.dp),
+                tint = Color.White
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Text("Export CSV", fontSize = 10.5.sp, fontWeight = FontWeight.Bold)
+        }
+
+        // Button 4: WhatsApp
+        Button(
+            onClick = onWhatsAppClick,
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF15803D)),
+            shape = RoundedCornerShape(6.dp),
+            contentPadding = PaddingValues(horizontal = 9.dp, vertical = 2.dp),
+            modifier = Modifier
+                .height(30.dp)
+                .testTag("btn_whatsapp_share")
+        ) {
+            Icon(
+                imageVector = Icons.Default.Share,
+                contentDescription = "WhatsApp",
+                modifier = Modifier.size(13.dp),
+                tint = Color.White
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Text("WhatsApp", fontSize = 10.5.sp, fontWeight = FontWeight.Bold)
         }
     }
 }

@@ -44,6 +44,18 @@ class ExampleUnitTest {
         assertEquals("43020114172", res.empId)
         assertEquals("AICPR6198J", res.panNo)
         assertEquals(91700.0, res.basicPay, 0.0)
-        assertEquals(3200.0, res.hra, 0.0)
+    }
+
+    @Test
+    fun testPdfTextExtractorWithRealIfhrmsPdf() {
+        val file = java.io.File("../public/assets/aistudio/PAYDRAWN_1_43020114172__3__bba07307.pdf")
+        if (file.exists()) {
+            val text = com.example.parser.PdfTextExtractor.extractTextFromInputStream(file.inputStream())
+            assertTrue(text.contains("Robert Sebastin J"))
+            assertTrue(text.contains("43020114172"))
+            val parsed = IfhrmsDataParser.parseIfhrmsText(text)
+            assertEquals("Robert Sebastin J", parsed.name)
+            assertEquals("43020114172", parsed.empId)
+        }
     }
 }

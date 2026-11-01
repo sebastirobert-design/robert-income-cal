@@ -12,6 +12,7 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ContentPaste
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -41,9 +42,13 @@ fun AutoFillDataEntryScreen(
         incrementMonth: Int,
         janDa: Double,
         julDa: Double,
-        daArrear: Double,
+        janDaArrearMonths: Int,
+        janDaArrearAmount: Double,
+        julDaArrearMonths: Int,
+        julDaArrearAmount: Double,
         bonus: Double,
-        surrenderDays: Int
+        surrenderDays: Int,
+        surrenderMonth: String
     ) -> Unit,
     onPasteIfhrmsClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -52,11 +57,24 @@ fun AutoFillDataEntryScreen(
     var hraText by remember(profile.fixedHra) { mutableStateOf(profile.fixedHra.toInt().toString()) }
     var selectedGrade by remember(profile.hraGrade) { mutableStateOf(profile.hraGrade) }
     var selectedIncMonth by remember(profile.incrementMonth) { mutableStateOf(profile.incrementMonth) }
+
+    // DA January
     var janDaText by remember(taxYear.defaultJanDa) { mutableStateOf(taxYear.defaultJanDa.toInt().toString()) }
+    var janDaArrearMonthsText by remember(earnings.daArrearMonths1) { mutableStateOf(earnings.daArrearMonths1.toString()) }
+    var janDaArrearAmountText by remember(earnings.daArrear1) { mutableStateOf(earnings.daArrear1.toInt().toString()) }
+
+    // DA July
     var julDaText by remember(taxYear.defaultJulDa) { mutableStateOf(taxYear.defaultJulDa.toInt().toString()) }
-    var daArrearText by remember(earnings.daArrear1) { mutableStateOf(earnings.daArrear1.toInt().toString()) }
+    var julDaArrearMonthsText by remember(earnings.daArrearMonths2) { mutableStateOf(earnings.daArrearMonths2.toString()) }
+    var julDaArrearAmountText by remember(earnings.daArrear2) { mutableStateOf(earnings.daArrear2.toInt().toString()) }
+
+    // Bonus & Surrender
     var bonusText by remember(earnings.bonus) { mutableStateOf(earnings.bonus.toInt().toString()) }
     var surrenderDays by remember(earnings.surrenderDays) { mutableStateOf(earnings.surrenderDays) }
+    var surrenderMonth by remember(earnings.surrenderMonth) {
+        mutableStateOf(if (earnings.surrenderMonth.isNotBlank()) earnings.surrenderMonth else "இல்லை (None)")
+    }
+    var surrenderMonthExpanded by remember { mutableStateOf(false) }
 
     val hraGrades = listOf("Grade 1(a)", "Grade 1(b)", "Grade II", "Grade III", "Grade IV", "Custom")
     val incMonthOptions = listOf(
@@ -67,11 +85,27 @@ fun AutoFillDataEntryScreen(
         10 to "ஜனவரி (January)"
     )
 
+    val surrenderMonths = listOf(
+        "இல்லை (None)",
+        "மார்ச் (March)",
+        "ஏப்ரல் (April)",
+        "மே (May)",
+        "ஜூன் (June)",
+        "ஜூலை (July)",
+        "ஆகஸ்ட் (August)",
+        "செப்டம்பர் (September)",
+        "அக்டோபர் (October)",
+        "நவம்பர் (November)",
+        "டிசம்பர் (December)",
+        "ஜனவரி (January)",
+        "பிப்ரவரி (February)"
+    )
+
     Column(
         modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(14.dp),
+            .padding(start = 10.dp, end = 20.dp, top = 8.dp, bottom = 14.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         // Quick Explanation Banner
@@ -101,7 +135,7 @@ fun AutoFillDataEntryScreen(
                         color = Color(0xFF1E3A8A)
                     )
                     Text(
-                        text = "மார்ச் அடிப்படை ஊதியம் மற்றும் HRA மட்டும் உள்ளிட்டால் போதும்; DA, நிலுவை, போனஸ், CPS/TPF மற்றும் வரி தானாக பூர்த்தி செய்யப்படும்.",
+                        text = "மார்ச் அடிப்படை ஊதியம் மற்றும் HRA உள்ளிட்ட பிறகு, 'சேமித்து கணக்கிடு' பொத்தானை அழுத்துங்கள்.",
                         fontSize = 11.5.sp,
                         color = Color(0xFF3B82F6)
                     )
@@ -160,89 +194,178 @@ fun AutoFillDataEntryScreen(
                         shape = RoundedCornerShape(8.dp)
                     )
 
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "HRA தரம் (HRA Grade):",
-                            fontSize = 11.5.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = Color(0xFF475569)
-                        )
-                        var gradeExpanded by remember { mutableStateOf(false) }
-                        ExposedDropdownMenuBox(
-                            expanded = gradeExpanded,
-                            onExpandedChange = { gradeExpanded = !gradeExpanded }
-                        ) {
-                            OutlinedTextField(
-                                value = selectedGrade,
-                                onValueChange = {},
-                                readOnly = true,
-                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = gradeExpanded) },
-                                modifier = Modifier
-                                    .menuAnchor()
-                                    .fillMaxWidth(),
-                                shape = RoundedCornerShape(8.dp)
-                            )
-                            ExposedDropdownMenu(
-                                expanded = gradeExpanded,
-                                onDismissRequest = { gradeExpanded = false }
-                            ) {
-                                hraGrades.forEach { g ->
-                                    DropdownMenuItem(
-                                        text = { Text(g) },
-                                        onClick = {
-                                            selectedGrade = g
-                                            gradeExpanded = false
-                                        }
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // Increment Month
-                Column {
-                    Text(
-                        text = "ஆண்டு ஊதிய உயர்வு மாதம் (Annual Increment Month):",
-                        fontSize = 11.5.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color(0xFF475569)
-                    )
-                    var incExpanded by remember { mutableStateOf(false) }
+                    var gradeExpanded by remember { mutableStateOf(false) }
                     ExposedDropdownMenuBox(
-                        expanded = incExpanded,
-                        onExpandedChange = { incExpanded = !incExpanded }
+                        expanded = gradeExpanded,
+                        onExpandedChange = { gradeExpanded = !gradeExpanded },
+                        modifier = Modifier.weight(1f)
                     ) {
                         OutlinedTextField(
-                            value = incMonthOptions.firstOrNull { it.first == selectedIncMonth }?.second ?: "அக்டோபர் (October)",
+                            value = selectedGrade,
                             onValueChange = {},
                             readOnly = true,
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = incExpanded) },
+                            label = { Text("HRA நிலை (Grade)") },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = gradeExpanded) },
                             modifier = Modifier
-                                .menuAnchor()
+                                .menuAnchor(MenuAnchorType.PrimaryNotEditable, true)
                                 .fillMaxWidth(),
                             shape = RoundedCornerShape(8.dp)
                         )
                         ExposedDropdownMenu(
-                            expanded = incExpanded,
-                            onDismissRequest = { incExpanded = false }
+                            expanded = gradeExpanded,
+                            onDismissRequest = { gradeExpanded = false }
                         ) {
-                            incMonthOptions.forEach { opt ->
+                            hraGrades.forEach { grade ->
                                 DropdownMenuItem(
-                                    text = { Text(opt.second) },
+                                    text = { Text(grade) },
                                     onClick = {
-                                        selectedIncMonth = opt.first
-                                        incExpanded = false
+                                        selectedGrade = grade
+                                        val bp = basicPayText.toDoubleOrNull() ?: 0.0
+                                        val suggested = com.example.calculator.HraTableHelper.getSuggestedHra(bp, grade, hraText.toDoubleOrNull() ?: 3200.0)
+                                        hraText = suggested.toInt().toString()
+                                        gradeExpanded = false
                                     }
                                 )
                             }
                         }
                     }
                 }
+
+                // Increment Month
+                var incExpanded by remember { mutableStateOf(false) }
+                ExposedDropdownMenuBox(
+                    expanded = incExpanded,
+                    onExpandedChange = { incExpanded = !incExpanded },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    OutlinedTextField(
+                        value = incMonthOptions.find { it.first == selectedIncMonth }?.second ?: "இல்லை",
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("வருடாந்திர ஊதிய உயர்வு மாதம் (Annual Increment Month)") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = incExpanded) },
+                        modifier = Modifier
+                            .menuAnchor(MenuAnchorType.PrimaryNotEditable, true)
+                            .fillMaxWidth(),
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    ExposedDropdownMenu(
+                        expanded = incExpanded,
+                        onDismissRequest = { incExpanded = false }
+                    ) {
+                        incMonthOptions.forEach { (m, label) ->
+                            DropdownMenuItem(
+                                text = { Text(label) },
+                                onClick = {
+                                    selectedIncMonth = m
+                                    incExpanded = false
+                                }
+                            )
+                        }
+                    }
+                }
             }
         }
 
-        // Secondary Details & Rates Card
+        // Section: DA January 2026 Details
+        Card(
+            shape = RoundedCornerShape(12.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            border = BorderStroke(1.dp, Color(0xFFCBD5E1))
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Text(
+                    text = "ஜனவரி 2026 அகவிலைப்படி (January 2026 DA & Arrears)",
+                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, color = Color(0xFF0F172A))
+                )
+
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    OutlinedTextField(
+                        value = janDaText,
+                        onValueChange = { janDaText = it },
+                        label = { Text("ஜனவரி DA %") },
+                        suffix = { Text("%") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    OutlinedTextField(
+                        value = janDaArrearMonthsText,
+                        onValueChange = { janDaArrearMonthsText = it },
+                        label = { Text("நிலுவை மாதங்கள் (Months)") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                }
+
+                OutlinedTextField(
+                    value = janDaArrearAmountText,
+                    onValueChange = { janDaArrearAmountText = it },
+                    label = { Text("ஜனவரி DA நிலுவைத்தொகை (Jan Arrear Amount)") },
+                    prefix = { Text("₹ ") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(8.dp)
+                )
+            }
+        }
+
+        // Section: DA July 2026 Details
+        Card(
+            shape = RoundedCornerShape(12.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            border = BorderStroke(1.dp, Color(0xFFCBD5E1))
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Text(
+                    text = "ஜூலை 2026 அகவிலைப்படி (July 2026 DA & Arrears)",
+                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, color = Color(0xFF0F172A))
+                )
+
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    OutlinedTextField(
+                        value = julDaText,
+                        onValueChange = { julDaText = it },
+                        label = { Text("ஜூலை DA %") },
+                        suffix = { Text("%") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    OutlinedTextField(
+                        value = julDaArrearMonthsText,
+                        onValueChange = { julDaArrearMonthsText = it },
+                        label = { Text("நிலுவை மாதங்கள் (Months)") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                }
+
+                OutlinedTextField(
+                    value = julDaArrearAmountText,
+                    onValueChange = { julDaArrearAmountText = it },
+                    label = { Text("ஜூலை DA நிலுவைத்தொகை (Jul Arrear Amount)") },
+                    prefix = { Text("₹ ") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(8.dp)
+                )
+            }
+        }
+
+        // Section: Surrender Leave & Festival Bonus
         Card(
             shape = RoundedCornerShape(12.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -255,58 +378,14 @@ fun AutoFillDataEntryScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text(
-                    text = "அகவிலைப்படி & பிற வரவுகள் (DA Rates & Arrears)",
+                    text = "ஈட்டிய விடுப்பு ஒப்படைப்பு & போனஸ் (Surrender & Bonus)",
                     style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, color = Color(0xFF0F172A))
                 )
-
-                // DA Rates
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    OutlinedTextField(
-                        value = janDaText,
-                        onValueChange = { janDaText = it },
-                        label = { Text("ஜனவரி DA %") },
-                        suffix = { Text("%") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(8.dp)
-                    )
-                    OutlinedTextField(
-                        value = julDaText,
-                        onValueChange = { julDaText = it },
-                        label = { Text("ஜூலை DA %") },
-                        suffix = { Text("%") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(8.dp)
-                    )
-                }
-
-                // DA Arrear & Bonus
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    OutlinedTextField(
-                        value = daArrearText,
-                        onValueChange = { daArrearText = it },
-                        label = { Text("DA நிலுவை (DA Arrear)") },
-                        prefix = { Text("₹ ") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(8.dp)
-                    )
-                    OutlinedTextField(
-                        value = bonusText,
-                        onValueChange = { bonusText = it },
-                        label = { Text("பண்டிகை முன்பணம் / போனஸ்") },
-                        prefix = { Text("₹ ") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(8.dp)
-                    )
-                }
 
                 // Surrender Leave Days
                 Column {
                     Text(
-                        text = "ஈட்டிய விடுப்பு ஒப்படைப்பு (Surrender Leave Days):",
+                        text = "ஈட்டிய விடுப்பு ஒப்படைப்பு நாட்கள் (Surrender Days):",
                         fontSize = 11.5.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = Color(0xFF475569)
@@ -324,33 +403,86 @@ fun AutoFillDataEntryScreen(
                         }
                     }
                 }
+
+                // Surrender Month Dropdown
+                ExposedDropdownMenuBox(
+                    expanded = surrenderMonthExpanded,
+                    onExpandedChange = { surrenderMonthExpanded = !surrenderMonthExpanded },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    OutlinedTextField(
+                        value = surrenderMonth,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("ஒப்படைப்பு மாதம் (Surrender Month)") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = surrenderMonthExpanded) },
+                        modifier = Modifier
+                            .menuAnchor(MenuAnchorType.PrimaryNotEditable, true)
+                            .fillMaxWidth(),
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    ExposedDropdownMenu(
+                        expanded = surrenderMonthExpanded,
+                        onDismissRequest = { surrenderMonthExpanded = false }
+                    ) {
+                        surrenderMonths.forEach { m ->
+                            DropdownMenuItem(
+                                text = { Text(m) },
+                                onClick = {
+                                    surrenderMonth = m
+                                    surrenderMonthExpanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+
+                // Bonus Input
+                OutlinedTextField(
+                    value = bonusText,
+                    onValueChange = { bonusText = it },
+                    label = { Text("பண்டிகை முன்பணம் / போனஸ் (Festival Bonus)") },
+                    prefix = { Text("₹ ") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(8.dp)
+                )
             }
         }
 
-        // Action Buttons Row
+        // Primary Commit / Save Button
         Button(
             onClick = {
                 val bp = basicPayText.toDoubleOrNull() ?: 91700.0
                 val hra = hraText.toDoubleOrNull() ?: 3200.0
                 val janDa = janDaText.toDoubleOrNull() ?: 58.0
                 val julDa = julDaText.toDoubleOrNull() ?: 60.0
-                val daArrear = daArrearText.toDoubleOrNull() ?: 7336.0
+                val janArrMonths = janDaArrearMonthsText.toIntOrNull() ?: 4
+                val janArrAmount = janDaArrearAmountText.toDoubleOrNull() ?: 7336.0
+                val julArrMonths = julDaArrearMonthsText.toIntOrNull() ?: 0
+                val julArrAmount = julDaArrearAmountText.toDoubleOrNull() ?: 0.0
                 val bonus = bonusText.toDoubleOrNull() ?: 3000.0
 
-                onAutoFill(bp, hra, selectedGrade, selectedIncMonth, janDa, julDa, daArrear, bonus, surrenderDays)
+                onAutoFill(
+                    bp, hra, selectedGrade, selectedIncMonth,
+                    janDa, julDa,
+                    janArrMonths, janArrAmount,
+                    julArrMonths, julArrAmount,
+                    bonus, surrenderDays, surrenderMonth
+                )
             },
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4F46E5)),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1D4ED8)),
             shape = RoundedCornerShape(10.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .height(48.dp)
-                .testTag("btn_trigger_auto_fill")
+                .height(50.dp)
+                .testTag("btn_save_and_calculate_tax")
         ) {
-            Icon(imageVector = Icons.Default.AutoAwesome, contentDescription = "Auto Fill")
+            Icon(imageVector = Icons.Default.Save, contentDescription = "Save")
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = "தானியங்கி முறையில் கணக்கிடு (Auto-Generate 12 Months & Tax)",
-                fontSize = 13.5.sp,
+                text = "💾 சேமித்து கணக்கிடு (Save & Calculate Tax)",
+                fontSize = 14.sp,
                 fontWeight = FontWeight.Bold
             )
         }

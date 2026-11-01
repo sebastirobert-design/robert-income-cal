@@ -132,9 +132,14 @@ class TaxViewModel : ViewModel() {
         incrementMonth: Int,
         janDa: Double,
         julDa: Double,
-        daArrear: Double = 0.0,
+        janDaArrearMonths: Int = 4,
+        janDaArrearAmount: Double = 0.0,
+        julDaArrearMonths: Int = 0,
+        julDaArrearAmount: Double = 0.0,
         bonus: Double = 3000.0,
-        surrenderDays: Int = 0
+        surrenderDays: Int = 0,
+        surrenderMonth: String = "None",
+        daArrear: Double = 0.0
     ) {
         val hraVal = HraTableHelper.getSuggestedHra(marchBasic, hraGrade, fixedHra)
         val months = TaxCalculatorEngine.autoGenerateSalaryData(
@@ -152,16 +157,22 @@ class TaxViewModel : ViewModel() {
             round(oneDaySalary * surrenderDays)
         } else 0.0
 
+        val finalJanArrear = if (janDaArrearAmount > 0.0) janDaArrearAmount else daArrear
+
         _monthsData.value = months
         _otherEarnings.value = OtherEarnings(
-            daArrear1 = daArrear,
+            daArrear1 = finalJanArrear,
+            daArrearMonths1 = janDaArrearMonths,
+            daArrear2 = julDaArrearAmount,
+            daArrearMonths2 = julDaArrearMonths,
             bonus = bonus,
             surrenderDays = surrenderDays,
+            surrenderMonth = surrenderMonth,
             surrenderAmount = surrenderPay
         )
 
         recalculateAll()
-        _snackbarMessage.value = "12 மாத ஊதியப் பட்டியல் & வரி தானாக கணக்கிடப்பட்டது! (Auto-filled 12 months & tax)"
+        _snackbarMessage.value = "தரவுகள் வெற்றிகரமாக சேமிக்கப்பட்டன! (Data saved & tax updated successfully!)"
     }
 
     fun updateMonth(updatedMonth: SalaryMonthData) {

@@ -45,7 +45,7 @@ fun TaxComparisonScreen(
         modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(14.dp),
+            .padding(start = 10.dp, end = 20.dp, top = 8.dp, bottom = 14.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         // Regime Selector Toggle
